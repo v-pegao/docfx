@@ -79,6 +79,7 @@ namespace Microsoft.Docs.Build
             {
                 if (_output.IsValueCreated)
                 {
+                    _output.Value.Flush();
                     _output.Value.Dispose();
                 }
             }
