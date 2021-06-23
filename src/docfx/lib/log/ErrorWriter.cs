@@ -48,7 +48,12 @@ namespace Microsoft.Docs.Build
             {
                 lock (_outputLock)
                 {
-                    _output.Value.WriteLine(error.ToString());
+                    var value = error.ToString();
+                    if (value == null || !value.Trim().EndsWith("}"))
+                    {
+                        Console.WriteLine($"incomplete log: {value}");
+                    }
+                    _output.Value.WriteLine(value);
                 }
             }
 
@@ -75,11 +80,17 @@ namespace Microsoft.Docs.Build
 
         public void Dispose()
         {
+            Console.WriteLine("Dispose ErrorWriter");
             lock (_outputLock)
             {
+                Console.WriteLine($"IsValueCreated {_output.IsValueCreated}");
                 if (_output.IsValueCreated)
                 {
+                    Console.WriteLine("Flush TextWriter");
                     _output.Value.Flush();
+                    Console.WriteLine("Close TextWriter");
+                    _output.Value.Close();
+                    Console.WriteLine("Dispose TextWriter");
                     _output.Value.Dispose();
                 }
             }
