@@ -115,6 +115,7 @@ namespace Microsoft.Docs.Build
         {
             using var writer = new StringWriter();
             Serialize(writer, graph, indent);
+            writer.Flush();
             return writer.ToString();
         }
 
