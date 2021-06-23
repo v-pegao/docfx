@@ -27,26 +27,35 @@ namespace Microsoft.Docs.Build
 
         public static bool Run(CommandLineOptions options, Package? package = null)
         {
+            var hasError = false;
             var operation = Telemetry.StartOperation("build");
-            using var errors = new ErrorWriter(options.Log);
-
-            if (options.Continue)
+            using (var errors = new ErrorWriter(options.Log))
             {
-                // Apply templates.
-                ContinueBuild.Run(errors, options);
+                if (options.Continue)
+                {
+                    // Apply templates.
+                    ContinueBuild.Run(errors, options);
+                }
+                else
+                {
+                    var files = options.File?.Select(Path.GetFullPath).ToArray();
+
+                    package ??= new LocalPackage(options.WorkingDirectory);
+
+                    new Builder(options, package).Build(errors, new ConsoleProgressReporter(), files);
+                }
+
+                operation.Complete();
+                errors.PrintSummary();
+                hasError = errors.HasError;
             }
-            else
-            {
-                var files = options.File?.Select(Path.GetFullPath).ToArray();
 
-                package ??= new LocalPackage(options.WorkingDirectory);
+            Console.WriteLine(options.Log);
+            Console.WriteLine("---------------------------------------------------------------------------------------------------------------------");
+            Console.WriteLine(File.ReadAllText(options.Log!));
+            Console.WriteLine("---------------------------------------------------------------------------------------------------------------------");
 
-                new Builder(options, package).Build(errors, new ConsoleProgressReporter(), files);
-            }
-
-            operation.Complete();
-            errors.PrintSummary();
-            return errors.HasError;
+            return hasError;
         }
 
         public void Build(ErrorBuilder errors, IProgress<string> progressReporter, string[]? files = null)
