@@ -28,6 +28,25 @@ namespace Microsoft.Docs.Build
             new JTokenJsonConverter { },
         };
 
+        private static readonly JsonSerializerSettings s_serializerSettings = new()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            DateParseHandling = DateParseHandling.None,
+            Converters = s_jsonConverters,
+            ContractResolver = new JsonContractResolver { NamingStrategy = s_namingStrategy },
+        };
+
+        private static readonly JsonSerializerSettings s_indentSerializerSettings = new()
+        {
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore,
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            DateParseHandling = DateParseHandling.None,
+            Converters = s_jsonConverters,
+            ContractResolver = new JsonContractResolver { NamingStrategy = s_namingStrategy },
+        };
+
         private static readonly JsonSerializer s_serializer = JsonSerializer.Create(new()
         {
             NullValueHandling = NullValueHandling.Ignore,
@@ -113,9 +132,7 @@ namespace Microsoft.Docs.Build
         /// </summary>
         public static string Serialize(object graph, bool indent = false)
         {
-            using var writer = new StringWriter();
-            Serialize(writer, graph, indent);
-            return writer.ToString();
+            return JsonConvert.SerializeObject(graph, indent ? s_indentSerializerSettings : s_serializerSettings);
         }
 
         /// <summary>
